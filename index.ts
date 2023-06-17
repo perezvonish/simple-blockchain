@@ -6,6 +6,7 @@ class Block {
     data: any;
     previousHash: string
     hash: string
+    nonce: number
 
     constructor(index: any, timestamp: Date, data: any, previousHash = "") {
         this.index = index
@@ -13,15 +14,26 @@ class Block {
         this.data = data
         this.previousHash = previousHash
         this.hash = this.calculateHash()
+        this.nonce = 0
     }
 
     calculateHash() {
-        return sha256(this.index + this.timestamp + JSON.stringify(this.data)).toString()
+        return sha256(this.index + this.timestamp + JSON.stringify(this.data) + this.nonce).toString()
+    }
+
+    mineBlock(difficulty: number) {
+        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
+            this.nonce++
+            this.hash = this.calculateHash()
+        }
+
+        console.log(`Block mined: ${this.hash}`)
     }
 }
 
 class Blockchain {
     chain: any[]
+    difficulty: number = 5
 
     constructor() {
         this.chain = [this.createGenesisBlock()]
@@ -37,7 +49,7 @@ class Blockchain {
 
     addBlock(newBlock: Block) {
         newBlock.previousHash = this.getLatestBlock().hash
-        newBlock.hash = newBlock.calculateHash()
+        newBlock.mineBlock(this.difficulty)
         return this.chain.push(newBlock)
     }
 
@@ -61,8 +73,17 @@ class Blockchain {
 
 const perezCoin = new Blockchain()
 
+console.log("Mine 1")
+console.log(process.uptime())
 perezCoin.addBlock(new Block(1, new Date, {amount: 1}))
+console.log(process.uptime())
+
+console.log("Mine 1")
 perezCoin.addBlock(new Block(2, new Date, {amount: 15}))
+process.uptime()
+
+console.log("Mine 1")
 perezCoin.addBlock(new Block(3, new Date, {amount: 14}))
+process.uptime()
 
 console.log(perezCoin.isValid())
